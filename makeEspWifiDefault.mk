@@ -1,9 +1,9 @@
 # My makefile
 LIBARAIES_DIR = $(HOME)/Documents/Arduino/libraries
-SKETCH = $(LIBARAIES_DIR)/OpenBCI_Wifi/examples/DefaultBoard/DefaultBoard.ino
-OPENBCI_WIFI_DIR = $(LIBARAIES_DIR)/OpenBCI_Wifi
+SKETCH = $(HOME)/Code/OpenBCI_Wifi/examples/DefaultBoard/DefaultBoard.ino
+OPENBCI_WIFI_DIR = $(HOME)/Code/OpenBCI_Wifi
 
-UPLOAD_PORT = /dev/cu.usbserial-A104JV88
+UPLOAD_PORT = /dev/cu.usbserial-DJ00A3RP
 ESP_ROOT = $(HOME)/esp8266
 ESP_LIBS = $(ESP_ROOT)/libraries
 

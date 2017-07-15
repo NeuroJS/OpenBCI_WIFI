@@ -149,6 +149,7 @@ size_t jsonBufferSize;
 String jsonStr;
 String outputString;
 
+uint8_t lastSampleNumber;
 uint8_t numChannels;
 uint8_t ntpTimeSyncAttempts;
 uint8_t outputBuf[MAX_PACKETS_PER_SEND_TCP * BYTES_PER_OBCI_PACKET];
@@ -157,7 +158,7 @@ uint8_t passthroughPosition;
 uint8_t ringBuf[NUM_PACKETS_IN_RING_BUFFER][BYTES_PER_OBCI_PACKET];
 uint8_t sampleNumber;
 uint8_t samplesLoaded;
-uint8_t lastSampleNumber;
+uint8_t webSocketClientID = 0;
 
 unsigned long lastSendToClient;
 unsigned long lastHeadMove;
@@ -960,17 +961,22 @@ String fragmentBuffer = "";
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
 
+  webSocketClientID = num;
+
 	switch(type) {
 		case WStype_DISCONNECTED:
-    webSocket.sendTXT(num, JSON_CONNECTED);
+      webSocket.sendTXT(num, JSON_CONNECTED);
 			USE_SERIAL.printf("[%u] Disconnected!\n", num);
+      passthroughBuffer[0] = 's';
+      passthroughPosition = 1;
 			break;
 		case WStype_CONNECTED: {
 			IPAddress ip = webSocket.remoteIP(num);
 			USE_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
-
-			// send message to client
-			webSocket.sendTXT(num, JSON_CONNECTED);
+      curOutputProtocol = OUTPUT_PROTOCOL_WEB_SOCKETS;
+      curOutputMode = OUTPUT_MODE_JSON;
+      passthroughBuffer[0] = 'b';
+      passthroughPosition = 1;
 		}
 			break;
 		case WStype_TEXT:
@@ -1582,6 +1588,13 @@ void loop() {
           clientTCP.write("\r\n");
         }
 
+        jsonStr = "";
+
+      } else if (curOutputProtocol == OUTPUT_PROTOCOL_WEB_SOCKETS) {
+        jsonStr = "";
+        root.printTo(Serial);
+        //webSocket.sendTXT(webSocketClientID, jsonStr);
+        jsonStr = "";
       } else {
         root.printTo(jsonStr);
         clientMQTT.publish("openbci", jsonStr.c_str());
